@@ -37,6 +37,29 @@ func init() {
 	solana.RegisterInstructionDecoder(ProgramID, registryDecodeInstruction)
 }
 
+const (
+	// Instruction_Create Creates an associated token account for the given wallet address and
+	// token mint Returns an error if the account exists.
+	Instruction_Create uint8 = iota
+
+	// Instruction_CreateIdempotent Creates an associated token account for the given wallet address and
+	// token mint, if it doesn't already exist.  Returns an error if the
+	// account exists, but with a different owner.
+	Instruction_CreateIdempotent
+
+	// Instruction_RecoverNested / Transfers from and closes a nested associated token account: an
+	// associated token account owned by an associated token account.
+	//
+	// The tokens are moved from the nested associated token account to the
+	// wallet's associated token account, and the nested account lamports are
+	// moved to the wallet.
+	//
+	// Note: Nested token accounts are an anti-pattern, and almost always
+	// created unintentionally, so this instruction should only be used to
+	// recover from errors.
+	Instruction_RecoverNested
+)
+
 type Instruction struct {
 	bin.BaseVariant
 }
@@ -50,7 +73,7 @@ func (inst *Instruction) EncodeToTree(parent treeout.Branches) {
 }
 
 var InstructionImplDef = bin.NewVariantDefinition(
-	bin.NoTypeIDEncoding, // NOTE: the associated-token-account program has no ID encoding.
+	bin.Uint8TypeIDEncoding,
 	[]bin.VariantType{
 		{
 			"Create", (*Create)(nil),

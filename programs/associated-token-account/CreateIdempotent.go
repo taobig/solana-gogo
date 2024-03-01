@@ -15,65 +15,38 @@
 package associatedtokenaccount
 
 import (
-	"errors"
-	"fmt"
-
 	bin "github.com/gagliardetto/binary"
-	solana "github.com/gagliardetto/solana-go"
-	format "github.com/gagliardetto/solana-go/text/format"
-	treeout "github.com/gagliardetto/treeout"
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/text/format"
+	"github.com/gagliardetto/treeout"
 )
 
-type Create struct {
-	Payer  solana.PublicKey `bin:"-" borsh_skip:"true"`
-	Wallet solana.PublicKey `bin:"-" borsh_skip:"true"`
-	Mint   solana.PublicKey `bin:"-" borsh_skip:"true"`
-
-	// [0] = [WRITE, SIGNER] Payer
-	// ··········· Funding account
-	//
-	// [1] = [WRITE] AssociatedTokenAccount
-	// ··········· Associated token account address to be created
-	//
-	// [2] = [] Wallet
-	// ··········· Wallet address for the new associated token account
-	//
-	// [3] = [] TokenMint
-	// ··········· The token mint for the new associated token account
-	//
-	// [4] = [] SystemProgram
-	// ··········· System program ID
-	//
-	// [5] = [] TokenProgram
-	// ··········· SPL token program ID
-	//
-	// [6] = [] SysVarRent
-	// ··········· SysVarRentPubkey
-	solana.AccountMetaSlice `bin:"-" borsh_skip:"true"`
+type CreateIdempotent struct {
+	Create
 }
 
-// NewCreateInstructionBuilder creates a new `Create` instruction builder.
-func NewCreateInstructionBuilder() *Create {
-	nd := &Create{}
+// NewCreateIdempotentInstructionBuilder creates a new `CreateIdempotent` instruction builder.
+func NewCreateIdempotentInstructionBuilder() *CreateIdempotent {
+	nd := &CreateIdempotent{}
 	return nd
 }
 
-func (inst *Create) SetPayer(payer solana.PublicKey) *Create {
+func (inst *CreateIdempotent) SetPayer(payer solana.PublicKey) *CreateIdempotent {
 	inst.Payer = payer
 	return inst
 }
 
-func (inst *Create) SetWallet(wallet solana.PublicKey) *Create {
+func (inst *CreateIdempotent) SetWallet(wallet solana.PublicKey) *CreateIdempotent {
 	inst.Wallet = wallet
 	return inst
 }
 
-func (inst *Create) SetMint(mint solana.PublicKey) *Create {
+func (inst *CreateIdempotent) SetMint(mint solana.PublicKey) *CreateIdempotent {
 	inst.Mint = mint
 	return inst
 }
 
-func (inst Create) Build() *Instruction {
+func (inst CreateIdempotent) Build() *Instruction {
 
 	// Find the associatedTokenAddress;
 	associatedTokenAddress, _, _ := solana.FindAssociatedTokenAddress(
@@ -123,45 +96,15 @@ func (inst Create) Build() *Instruction {
 
 	return &Instruction{BaseVariant: bin.BaseVariant{
 		Impl:   inst,
-		TypeID: bin.TypeIDFromUint8(Instruction_Create),
+		TypeID: bin.TypeIDFromUint8(Instruction_CreateIdempotent),
 	}}
 }
 
-// ValidateAndBuild validates the instruction accounts.
-// If there is a validation error, return the error.
-// Otherwise, build and return the instruction.
-func (inst Create) ValidateAndBuild() (*Instruction, error) {
-	if err := inst.Validate(); err != nil {
-		return nil, err
-	}
-	return inst.Build(), nil
-}
-
-func (inst *Create) Validate() error {
-	if inst.Payer.IsZero() {
-		return errors.New("Payer not set")
-	}
-	if inst.Wallet.IsZero() {
-		return errors.New("Wallet not set")
-	}
-	if inst.Mint.IsZero() {
-		return errors.New("Mint not set")
-	}
-	_, _, err := solana.FindAssociatedTokenAddress(
-		inst.Wallet,
-		inst.Mint,
-	)
-	if err != nil {
-		return fmt.Errorf("error while FindAssociatedTokenAddress: %w", err)
-	}
-	return nil
-}
-
-func (inst *Create) EncodeToTree(parent treeout.Branches) {
+func (inst *CreateIdempotent) EncodeToTree(parent treeout.Branches) {
 	parent.Child(format.Program(ProgramName, ProgramID)).
 		//
 		ParentFunc(func(programBranch treeout.Branches) {
-			programBranch.Child(format.Instruction("Create")).
+			programBranch.Child(format.Instruction("CreateIdempotent")).
 				//
 				ParentFunc(func(instructionBranch treeout.Branches) {
 
@@ -182,21 +125,13 @@ func (inst *Create) EncodeToTree(parent treeout.Branches) {
 		})
 }
 
-func (inst Create) MarshalWithEncoder(encoder *bin.Encoder) error {
-	return encoder.WriteBytes([]byte{}, false)
-}
-
-func (inst *Create) UnmarshalWithDecoder(decoder *bin.Decoder) error {
-	return nil
-}
-
-func NewCreateInstruction(
-	payer solana.PublicKey,
-	walletAddress solana.PublicKey,
-	splTokenMintAddress solana.PublicKey,
-) *Create {
-	return NewCreateInstructionBuilder().
-		SetPayer(payer).
-		SetWallet(walletAddress).
-		SetMint(splTokenMintAddress)
+func NewCreateIdempotentInstruction(
+	Payer solana.PublicKey,
+	Wallet solana.PublicKey,
+	Mint solana.PublicKey,
+) *CreateIdempotent {
+	return NewCreateIdempotentInstructionBuilder().
+		SetPayer(Payer).
+		SetWallet(Wallet).
+		SetMint(Mint)
 }
