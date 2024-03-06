@@ -36,6 +36,8 @@ var (
 	// Verify secp256k1 public key recovery operations (ecrecover).
 	Secp256k1ProgramID = MustPublicKeyFromBase58("KeccakSecp256k11111111111111111111111111111")
 
+	Ed25519ProgramID = MustPublicKeyFromBase58("Ed25519SigVerify111111111111111111111111111")
+
 	FeatureProgramID = MustPublicKeyFromBase58("Feature111111111111111111111111111111111111")
 
 	ComputeBudget = MustPublicKeyFromBase58("ComputeBudget111111111111111111111111111111")
