@@ -14,7 +14,7 @@ const ProgramName = "Ed25519SigVerify"
 
 type Instruction struct {
 	Signer    solana.PublicKey
-	Signature [64]byte
+	Signature solana.Signature
 	Message   []byte
 }
 
@@ -57,17 +57,29 @@ func (inst *Instruction) Data() ([]byte, error) {
 	data = binary.LittleEndian.AppendUint16(data, uint16(len(inst.Message)))
 	data = binary.LittleEndian.AppendUint16(data, math.MaxUint16)
 
-	data = append(data, inst.Signer.Bytes()...)
+	data = append(data, inst.Signer[:]...)
 	data = append(data, inst.Signature[:]...)
 	data = append(data, inst.Message...)
 
 	return data, nil
 }
 
-func NewEd25519VerifySigInstruction(signer solana.PublicKey, sig [64]byte, msg []byte) *Instruction {
+func NewEd25519SigVerifyInstruction(signer solana.PublicKey, sig solana.Signature, msg []byte) *Instruction {
 	return &Instruction{
 		Signer:    signer,
 		Signature: sig,
 		Message:   msg,
 	}
+}
+
+func NewEd25519SigVerifyInstructionWithWallet(signer *solana.Wallet, msg []byte) (*Instruction, error) {
+	sig, err := signer.PrivateKey.Sign(msg)
+	if err != nil {
+		return nil, err
+	}
+	return &Instruction{
+		Signer:    signer.PublicKey(),
+		Signature: sig,
+		Message:   msg,
+	}, nil
 }
