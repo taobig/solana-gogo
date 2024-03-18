@@ -23,6 +23,9 @@ import (
 
 type CreateIdempotent struct {
 	Create
+
+	associatedToken solana.PublicKey
+	programID       solana.PublicKey
 }
 
 // NewCreateIdempotentInstructionBuilder creates a new `CreateIdempotent` instruction builder.
@@ -46,13 +49,23 @@ func (inst *CreateIdempotent) SetMint(mint solana.PublicKey) *CreateIdempotent {
 	return inst
 }
 
+func (inst *CreateIdempotent) SetAssociatedToken(associatedToken solana.PublicKey) *CreateIdempotent {
+	inst.associatedToken = associatedToken
+	return inst
+}
+
+func (inst *CreateIdempotent) SetProgramID(tokenProgramID solana.PublicKey) *CreateIdempotent {
+	inst.programID = tokenProgramID
+	return inst
+}
+
 func (inst CreateIdempotent) Build() *Instruction {
 
-	// Find the associatedTokenAddress;
-	associatedTokenAddress, _, _ := solana.FindAssociatedTokenAddress(
-		inst.Wallet,
-		inst.Mint,
-	)
+	//// Find the associatedTokenAddress;
+	//associatedTokenAddress, _, _ := solana.FindAssociatedTokenAddress(
+	//	inst.Wallet,
+	//	inst.Mint,
+	//)
 
 	keys := []*solana.AccountMeta{
 		{
@@ -61,7 +74,8 @@ func (inst CreateIdempotent) Build() *Instruction {
 			IsWritable: true,
 		},
 		{
-			PublicKey:  associatedTokenAddress,
+			//PublicKey:  associatedTokenAddress,
+			PublicKey:  inst.associatedToken,
 			IsSigner:   false,
 			IsWritable: true,
 		},
@@ -81,7 +95,8 @@ func (inst CreateIdempotent) Build() *Instruction {
 			IsWritable: false,
 		},
 		{
-			PublicKey:  solana.TokenProgramID,
+			//PublicKey:  solana.TokenProgramID,
+			PublicKey:  inst.programID,
 			IsSigner:   false,
 			IsWritable: false,
 		},
@@ -127,11 +142,15 @@ func (inst *CreateIdempotent) EncodeToTree(parent treeout.Branches) {
 
 func NewCreateIdempotentInstruction(
 	Payer solana.PublicKey,
+	associatedToken solana.PublicKey,
 	Wallet solana.PublicKey,
 	Mint solana.PublicKey,
+	programID solana.PublicKey,
 ) *CreateIdempotent {
 	return NewCreateIdempotentInstructionBuilder().
 		SetPayer(Payer).
+		SetAssociatedToken(associatedToken).
 		SetWallet(Wallet).
-		SetMint(Mint)
+		SetMint(Mint).
+		SetProgramID(programID)
 }
