@@ -15,7 +15,7 @@
 // A Token program on the Solana blockchain.
 // This program defines a common implementation for Fungible and Non Fungible tokens.
 
-package token
+package token2022
 
 import (
 	"bytes"

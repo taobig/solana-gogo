@@ -1,4 +1,4 @@
-package token
+package token2022
 
 import (
 	"bytes"
