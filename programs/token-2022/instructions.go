@@ -31,14 +31,14 @@ import (
 // Maximum number of multisignature signers (max N)
 const MAX_SIGNERS = 11
 
-var ProgramID ag_solanago.PublicKey = ag_solanago.TokenProgramID
+var ProgramID ag_solanago.PublicKey = ag_solanago.Token2022ProgramID
 
 func SetProgramID(pubkey ag_solanago.PublicKey) {
 	ProgramID = pubkey
 	ag_solanago.RegisterInstructionDecoder(ProgramID, registryDecodeInstruction)
 }
 
-const ProgramName = "Token"
+const ProgramName = "Token-2022"
 
 func init() {
 	if !ProgramID.IsZero() {
